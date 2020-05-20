@@ -33,6 +33,7 @@ jobs:
       - run: yarn install --frozen-lockfile
         working-directory: tools-public
       - run: echo "::add-path::$(pwd)/bin"
+      - run: echo "::set-env name=EXPO_ROOT_DIR::$(pwd)"
       - run: expotools ios-generate-dynamic-macros
       - uses: ruby/setup-ruby@v1
       - name: bundler cache
