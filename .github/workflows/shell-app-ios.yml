@@ -10,6 +10,7 @@ on:
     branches: [ "@nick/github-shell-app-ios" ]
     paths:
       - .github/workflows/shell-app-ios.yml
+      - ios/**
 
 jobs:
   build:
