@@ -70,7 +70,8 @@ jobs:
         id: tarball
         run: echo "::set-output name=filename::ios-shell-builder-sdk-latest-${{ github.sha }}"
       - name: Package release tarball
-        timeout-minutes: 40
+        # uncomment before merging
+        # if: ${{ github.event.action == 'shell-ios-release' }}
         run: |
           tar \
             -zcf "/tmp/${{ steps.tarball.outputs.filename }}" \
