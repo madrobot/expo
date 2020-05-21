@@ -6,7 +6,9 @@
 #import "EXPendingNotification.h"
 #import "EXNotifications.h"
 
-#import <EXNotifications/EXNotificationsDelegate.h>
+#if __has_include(<EXNotifications/EXNotificationCenterDelegate.h>)
+#import <EXNotifications/EXNotificationCenterDelegate.h>
+#endif
 
 @interface EXUserNotificationManager : NSObject <UNUserNotificationCenterDelegate, EXNotificationsIdentifiersManager, EXNotificationsDelegate>
 
