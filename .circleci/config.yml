@@ -295,7 +295,6 @@ workflows:
       #     requires:
       #       - test_suite_publish
       - android_unit_tests
-      - client_ios
 
   release_simulator:
     when: << pipeline.parameters.release_simulator >>

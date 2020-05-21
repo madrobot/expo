@@ -1,0 +1,78 @@
+name: iOS Client
+
+on:
+  repository_dispatch:
+    types: [ simulator-release ]
+  pull_request:
+    branches: [ master ]
+    paths:
+      - .github/workflows/client-ios.yml
+      - ios/**
+      - tools/expotools/**
+      - secrets/**
+      - fastlane/**
+      - Gemfile.lock
+      - .ruby-version
+  push:
+    # for testing
+    #branches: [ master ]
+    paths:
+      - .github/workflows/client-ios.yml
+      - ios/**
+      - tools/expotools/**
+      - secrets/**
+      - fastlane/**
+      - Gemfile.lock
+      - .ruby-version
+
+jobs:
+  build:
+    runs-on: macos-10.15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+          lfs: true
+      - run: brew install git-crypt
+      - run: git crypt unlock <(echo $GIT_CRYPT_KEY_BASE64 | base64 --decode)
+        if: ${{ secrets.git-crypt-key-base64 }}
+        env:
+          GIT_CRYPT_KEY_BASE64: ${{ secrets.git-crypt-key-base64 }}
+      - run: bin/expotools ios-generate-dynamic-macros
+      - uses: ruby/setup-ruby@v1
+      - name: bundler cache
+        uses: actions/cache@v1
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gems-${{ hashFiles('.ruby-version') }}-${{ hashFiles('Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
+      - run: echo "::set-env name=BUNDLE_BIN::$(pwd)/.direnv/bin"
+        working-directory: ''
+      - run: echo "::add-path::$BUNDLE_BIN"
+      - name: install fastlane
+        run: |
+          bundle config path vendor/bundle
+          bundle install --jobs 4 --retry 3
+      - run: fastlane ios create_simulator_build
+      - name: Save test results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: faslane-logs
+          path: ~/Library/Logs/fastlane
+      - run: expotools client-build --platform ios --release
+        if: ${{ github.event.action == 'simulator-ios-release' }} 
+      - uses: 8398a7/action-slack@v3
+        if: failure() && (github.event.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/heads/sdk-'))
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.slack_webhook_ios }}
+        with:
+          channel: '#platform-ios'
+          status: ${{ job.status }}
+          fields: commit,author,action,message
+          author_name: client ios build
+          mention: here
+          if_mention: failure
