@@ -5,12 +5,11 @@ on:
     types: [ shell-ios-release ]
   schedule:
     - cron: '20 5 * * 2,4,6'
-  # testing
+  # testing, do not merge
   push:
-    branches: [ "@nick/github-shell-app-ios" ]
     paths:
       - .github/workflows/shell-app-ios.yml
-      - ios/**
+      - 'ios/**'
 
 jobs:
   build:
