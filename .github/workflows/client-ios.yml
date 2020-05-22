@@ -27,10 +27,9 @@ jobs:
           submodules: true
           lfs: true
       - run: brew install git-crypt
-      - run: git crypt unlock <(echo $GIT_CRYPT_KEY_BASE64 | base64 --decode)
-        if: ${{ secrets.git-crypt-key-base64 }}
+      - run: [ -n "$GCK_B64" ] && git crypt unlock <(echo $GCK_B64 | base64 --decode)
         env:
-          GIT_CRYPT_KEY_BASE64: ${{ secrets.git-crypt-key-base64 }}
+          GCK_B64: ${{ secrets.git-crypt-key-base64 }}
       - run: bin/expotools ios-generate-dynamic-macros
       - uses: ruby/setup-ruby@v1
       - name: bundler cache
