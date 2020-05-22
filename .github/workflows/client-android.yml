@@ -20,12 +20,12 @@ on:
 
 jobs:
   build:
-    runs-on: macos-10.15
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: true
-      - run: apt-get install git-crypt
+      - run: sudo apt-get install git-crypt
       - run: '[ -n "$GCK_B64" ] && git crypt unlock <(echo "$GCK_B64" | base64 --decode)'
         env:
           GCK_B64: ${{ secrets.git-crypt-key-base64 }}
