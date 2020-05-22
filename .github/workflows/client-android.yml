@@ -36,10 +36,7 @@ jobs:
       - name: Decode release keystore
         env:
           AK_B64: ${{ secrets.android-keystore-base64 }}
-        run: |
-          if [ -n "$AK_B64" ]; then
-            echo "$AK_B64" | base64 -d > android/app/release-key.jks
-          fi
+        run: echo "$AK_B64" | base64 -d > android/app/release-key.jks
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
         run: echo "::set-output name=dir::$(yarn cache dir)"
