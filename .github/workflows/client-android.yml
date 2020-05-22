@@ -26,7 +26,7 @@ jobs:
         with:
           submodules: true
       - run: apt-get install git-crypt
-      - run: [ -n "$GCK_B64" ] && git crypt unlock <(echo "$GCK_B64" | base64 --decode)
+      - run: '[ -n "$GCK_B64" ] && git crypt unlock <(echo "$GCK_B64" | base64 --decode)'
         env:
           GCK_B64: ${{ secrets.git-crypt-key-base64 }}
       - name: Decode release keystore
