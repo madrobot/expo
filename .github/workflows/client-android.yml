@@ -26,16 +26,20 @@ jobs:
         with:
           submodules: true
       - run: sudo apt-get install git-crypt
-      - run: |
+      - name: unlock secrets if possible
+        env:
+          GCK_B64: ${{ secrets.git-crypt-key-base64 }}
+        run: |
           if [ -n "$GCK_B64" ]; then
             git crypt unlock <(echo "$GCK_B64" | base64 --decode)
           fi
-        env:
-          GCK_B64: ${{ secrets.git-crypt-key-base64 }}
       - name: Decode release keystore
-        run: echo "$AK_B64" | base64 -d > android/app/release-key.jks
         env:
           AK_B64: ${{ secrets.android-keystore-base64 }}
+        run: |
+          if [ -n "$AK_B64" ]; then
+            echo "$AK_B64" | base64 -d > android/app/release-key.jks
+          fi
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
         run: echo "::set-output name=dir::$(yarn cache dir)"
