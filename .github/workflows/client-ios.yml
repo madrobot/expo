@@ -27,7 +27,10 @@ jobs:
           submodules: true
           lfs: true
       - run: brew install git-crypt
-      - run: '[ -n "$GCK_B64" ] && git crypt unlock <(echo $GCK_B64 | base64 --decode)'
+      - run: |
+          if [ -n "$GCK_B64" ]; then
+            git crypt unlock <(echo "$GCK_B64" | base64 --decode)
+          fi
         env:
           GCK_B64: ${{ secrets.git-crypt-key-base64 }}
       - run: bin/expotools ios-generate-dynamic-macros
