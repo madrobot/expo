@@ -287,7 +287,6 @@ workflows:
     jobs:
       - home
       - expotools
-      - client_android
       # Disabled until further notice
       # See https://exponent-internal.slack.com/archives/C1QNF5L3C/p1576852692010900
       # - test_suite_publish

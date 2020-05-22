@@ -1,0 +1,97 @@
+name: Android Client
+
+on:
+  repository_dispatch:
+    types: [ google-play-release, apk-release ]
+  pull_request:
+    branches: [ master ]
+    #paths:
+  push:
+    #branches: [ master, sdk-* ]
+    paths:
+      - .github/workflows/client-android.yml
+      - secrets/**
+      - android/**
+      - fastlane/**
+      - tools-public/**
+      - Gemfile.lock
+      - .ruby-version
+      - yarn.lock
+
+jobs:
+  build:
+    runs-on: macos-10.15
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - run: apt-get install git-crypt
+      - run: git crypt unlock <(echo $GIT_CRYPT_KEY_BASE64 | base64 --decode)
+        if: ${{ secrets.git-crypt-key-b64 }}
+        env:
+          GIT_CRYPT_KEY_BASE64: ${{ secrets.git-crypt-key-b64 }}
+      - name: Decode release keystore
+        run: echo $ANDROID_KEYSTORE_B64 | base64 -d > android/app/release-key.jks
+        env:
+          ANDROID_KEYSTORE_B64: ${{ secrets.android-keystore-b64 }}
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+      - uses: actions/cache@v1
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}-${{ hashFiles('tools-public/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+      - run: yarn install --frozen-lockfile
+      - run: yarn install --frozen-lockfile
+        working-directory: tools-public
+      - uses: ruby/setup-ruby@v1
+      - name: bundler cache
+        uses: actions/cache@v1
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gems-${{ hashFiles('.ruby-version') }}-${{ hashFiles('Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
+      - run: echo "::set-env name=BUNDLE_BIN::$(pwd)/.direnv/bin"
+      - run: echo "::add-path::$BUNDLE_BIN"
+      - name: install fastlane
+        run: |
+          bundle config path vendor/bundle
+          bundle install --jobs 4 --retry 3
+      - uses: actions/cache@v1
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('android/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      - run: fastlane android build build_type:Release
+      - name: Store daemon logs for debugging crashes
+        uses: actions/upload-artifact@v2
+        with:
+          name: android-apk
+          path: android/app/build/outputs/apk
+      - name: Store daemon logs for debugging crashes
+        if: failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: gradle-daemon-logs
+          path: ~/.gradle/daemon
+      - uses: 8398a7/action-slack@v3
+        if: failure() && (github.event.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/heads/sdk-'))
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.slack_webhook_android }}
+        with:
+          channel: '#platform-android'
+          status: ${{ job.status }}
+          fields: commit,author,action,message
+          author_name: client android build
+          mention: here
+          if_mention: failure
+      - name: Upload APK to Google Play and release to production
+        run: fastlane android prod_release
+        if: ${{ github.event.action == 'google-play-release' }}
+      - run: expotools client-build --platform android --release
+        if: ${{ github.event.action == 'apk-release' }} 
