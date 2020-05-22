@@ -5,10 +5,16 @@ on:
     types: [ simulator-release ]
   pull_request:
     branches: [ master ]
-    #paths:
+    paths:
+      - .github/workflows/client-ios.yml
+      - ios/**
+      - tools/expotools/**
+      - secrets/**
+      - fastlane/**
+      - Gemfile.lock
+      - .ruby-version
   push:
-    # for testing
-    #branches: [ master, sdk-* ]
+    branches: [ master, sdk-* ]
     paths:
       - .github/workflows/client-ios.yml
       - ios/**
@@ -53,7 +59,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v2
         with:
-          name: faslane-logs
+          name: fastlane-logs
           path: ~/Library/Logs/fastlane
       - run: expotools client-build --platform ios --release
         if: ${{ github.event.action == 'simulator-ios-release' }} 
