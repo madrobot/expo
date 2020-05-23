@@ -62,7 +62,7 @@ export default function DevLoadingView() {
       );
       nativeDevLoadingViewEventEmitter.removeListener('devLoadingView:hide', handleHide);
     };
-  }, []);
+  }, [translateY]);
 
   if (isDevLoading || isAnimating) {
     return (
