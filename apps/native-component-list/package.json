@@ -29,7 +29,7 @@
     "expo-av": "~8.1.0",
     "expo-background-fetch": "~8.1.0",
     "expo-barcode-scanner": "~8.1.0",
-    "expo-battery": "~2.1.1",
+    "expo-battery": "~3.0.0",
     "expo-blur": "~8.1.0",
     "expo-brightness": "~8.1.0",
     "expo-calendar": "~8.1.0",
